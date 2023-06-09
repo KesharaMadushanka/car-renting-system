@@ -4,7 +4,9 @@ import com.example.carrentingsystem.entity.Vehicle;
 import com.example.carrentingsystem.service.VehicleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -30,14 +32,14 @@ public class VehicleController {
 
     //get vehicle by ID
     @GetMapping("{id}")
-    public ResponseEntity<Vehicle> getVehicleByID(@PathVariable String id){
+    public ResponseEntity<Vehicle> getVehicleByID(@PathVariable String id) {
         try {
             Vehicle vehicle = vehicleService.getVehicleById(id);
-            if(vehicle == null){
+            if (vehicle == null) {
                 return ResponseEntity.notFound().build();
             }
             return ResponseEntity.ok(vehicle);
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
@@ -50,7 +52,18 @@ public class VehicleController {
     public ResponseEntity<Vehicle> addVehicle(@RequestBody Vehicle vehicle) {
         try {
             Vehicle newVehicle = vehicleService.addVehicle(vehicle);
-            return ResponseEntity.ok(newVehicle);
+
+            String vehicleId = newVehicle.getVehicleID();
+
+
+            URI location =
+                    ServletUriComponentsBuilder
+                            .fromCurrentRequest()
+                            .path("/{id}")
+                            .buildAndExpand(vehicleId)
+                            .toUri();
+
+            return ResponseEntity.created(location).build();
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
