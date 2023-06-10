@@ -9,8 +9,9 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
 import { Button } from '@mui/material';
+import { Alert, Space, Spin } from 'antd';
 
-import { EditOutlined, DeleteFilled } from '@ant-design/icons';
+import { EditOutlined, DeleteFilled, LoadingOutlined } from '@ant-design/icons';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -33,10 +34,19 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 export default function VehicleTable() {
+  // eslint-disable-next-line no-unused-vars
+  const [visible, setVisible] = useState(true);
+  const handleClose = () => {
+    setVisible(false);
+  };
   const [loading, setLoading] = useState(true);
-  //get vehicled details
+  const [delLoading, setDelLoading] = useState(false);
+  //vehicle detail state
   const [vehicles, setVehicles] = useState([]);
+  //delete vehicle state
+  const [deleteStatus, setDeleteStatus] = useState(null);
 
+  //handle get vehicle data
   useEffect(() => {
     fetch('/vehicle').then((response) =>
       response
@@ -51,119 +61,209 @@ export default function VehicleTable() {
     );
   });
 
+  //handle delete vehicle
+  const deleteVehicle = (id) => {
+    fetch(`/vehicle/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then((response) => {
+        setDelLoading(true);
+        if (response.status === 204) {
+          setDeleteStatus('success');
+          setTimeout(() => {
+            setDeleteStatus(null);
+          }, 3000);
+        } else if (response.status === 404) {
+          setDeleteStatus('notFound');
+          setTimeout(() => {
+            setDeleteStatus(null);
+          }, 3000);
+        } else {
+          setDeleteStatus('error');
+          setTimeout(() => {
+            setDeleteStatus(null);
+          }, 3000);
+          throw new Error('Unknwon error');
+        }
+      })
+      .catch((error) => {
+        setDeleteStatus('error');
+        console.log(error);
+        setTimeout(() => {
+          setDeleteStatus(null);
+        }, 3000);
+      })
+      .finally(() => {
+        setDelLoading(false);
+      });
+  };
+
   return (
-    <TableContainer component={Paper}>
-      <Table aria-label="customized table">
-        <TableHead>
-          <TableRow>
-            <StyledTableCell>Vehicle Number</StyledTableCell>
-            <StyledTableCell align="center">Vehicle Brand</StyledTableCell>
-            <StyledTableCell align="center">Vehicle Model</StyledTableCell>
-            <StyledTableCell align="center">
-              Vehicle Chasis Number
-            </StyledTableCell>
-            <StyledTableCell align="center">Edit</StyledTableCell>
-            <StyledTableCell align="center">Delete</StyledTableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {loading ? (
-            // Display skeleton rows while loading
-            <>
-              <TableRow>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-              </TableRow>
-            </>
-          ) : (
-            //Actual data
-            vehicles.map((vehicle) => (
-              <StyledTableRow key={vehicle.vehicleId}>
-                <StyledTableCell component="th" scope="row">
-                  {vehicle.vehicleNumber}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  {vehicle.vehicleBrand}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  {vehicle.vehicleModel}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  {vehicle.vehicleChassisNumber}
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  <Button variant="outlined" color="warning">
-                    Edit&nbsp;
-                    <EditOutlined />
-                  </Button>
-                </StyledTableCell>
-                <StyledTableCell align="center">
-                  <Button variant="contained" color="error">
-                    Delete&nbsp;
-                    <DeleteFilled />
-                  </Button>
-                </StyledTableCell>
-              </StyledTableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <div>
+      {/* delete alert */}
+      <Space
+        direction="vertical"
+        style={{
+          width: '100%',
+          marginBottom: '10px',
+        }}
+      >
+        {deleteStatus === 'success' && (
+          <Alert
+            message="Successfully Deleted"
+            type="warning"
+            showIcon={true}
+            closable
+            afterClose={handleClose}
+          />
+        )}
+        {deleteStatus === 'notFound' && (
+          <Alert
+            message="Record not found"
+            type="error"
+            showIcon={true}
+            closable
+            afterClose={handleClose}
+          />
+        )}
+        {deleteStatus === 'error' && (
+          <Alert
+            message="Something went wrong"
+            type="error"
+            showIcon={true}
+            closable
+            afterClose={handleClose}
+          />
+        )}
+      </Space>
+
+      <TableContainer sx={{ marginTop: '2' }} component={Paper}>
+        <Table aria-label="customized table">
+          <TableHead>
+            <TableRow>
+              <StyledTableCell>Vehicle Number</StyledTableCell>
+              <StyledTableCell align="center">Vehicle Brand</StyledTableCell>
+              <StyledTableCell align="center">Vehicle Model</StyledTableCell>
+              <StyledTableCell align="center">
+                Vehicle Chasis Number
+              </StyledTableCell>
+              <StyledTableCell align="center">Edit</StyledTableCell>
+              <StyledTableCell align="center">Delete</StyledTableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              // Display skeleton rows while loading
+              <>
+                <TableRow>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton variant="text" />
+                  </TableCell>
+                </TableRow>
+              </>
+            ) : (
+              //Actual data
+              vehicles.map((vehicle) => (
+                <StyledTableRow key={vehicle.vehicleID}>
+                  <StyledTableCell component="th" scope="row">
+                    {vehicle.vehicleNumber}
+                  </StyledTableCell>
+                  <StyledTableCell align="center">
+                    {vehicle.vehicleBrand}
+                  </StyledTableCell>
+                  <StyledTableCell align="center">
+                    {vehicle.vehicleModel}
+                  </StyledTableCell>
+                  <StyledTableCell align="center">
+                    {vehicle.vehicleChassisNumber}
+                  </StyledTableCell>
+                  <StyledTableCell align="center">
+                    <Button variant="outlined" color="warning">
+                      Edit&nbsp;
+                      <EditOutlined />
+                    </Button>
+                  </StyledTableCell>
+                  <StyledTableCell align="center">
+                    <Button
+                      onClick={() => deleteVehicle(vehicle.vehicleID)}
+                      variant="contained"
+                      color="error"
+                      disabled={delLoading}
+                      startIcon={
+                        delLoading ? <LoadingOutlined /> : <DeleteFilled />
+                      }
+                    >
+                      {delLoading ? (
+                        <span>
+                          <Spin size="small" /> Deleting
+                        </span>
+                      ) : (
+                        'Delete'
+                      )}
+                    </Button>
+                  </StyledTableCell>
+                </StyledTableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
   );
 }
