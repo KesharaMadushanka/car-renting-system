@@ -4,9 +4,11 @@ import {
   CarOutlined,
   UnorderedListOutlined,
   DashboardOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import ViewVehicle from '../containers/ViewVehicleContainer';
 import Dashbored from '../containers/Dashbored';
+import AddVehicle from '../containers/AddVehicle';
 
 const { Header, Sider, Content } = Layout;
 
@@ -22,6 +24,7 @@ function getItem(label, key, icon, children) {
 const items = [
   getItem('Dashbored', null, <DashboardOutlined />),
   getItem('Vehicle', 'sub1', <CarOutlined />, [
+    getItem('Add Vehicle', '2', <PlusOutlined />),
     getItem('View Vehicles', '1', <UnorderedListOutlined />),
   ]),
 ];
@@ -39,6 +42,10 @@ const SideBar = () => {
     switch (selectedItem) {
       case '1':
         return <ViewVehicle />;
+
+      case '2':
+        return <AddVehicle />;
+
       default:
         return <Dashbored />;
     }
